@@ -1,3 +1,5 @@
+import limit
+import copy
 from collections import defaultdict
 import tkinter as tk
 from tkinter import ttk
@@ -207,6 +209,7 @@ class Graph:
             elif neighbor == start and len(path) > 2:
                 self.cycles.append(list(path))
         path.pop()
+    
 class DrawingApp:
     def __init__(self, root):
         self.root = root
@@ -257,12 +260,60 @@ class DrawingApp:
     def apply_properties_3(self):
         self.property_data.update({self.selection_string : self.entry_var3.get()})
         print(self.property_data) 
-
+    def convert_to_valid(self, angle):
+        a, b, c = ord(angle[0])-ord("A"), ord(angle[1])-ord("A"), ord(angle[2])-ord("A")
+        x = point_on_same_line(self.lines, a, b)
+        if self.lines[x].index(a) < self.lines[x].index(b):
+            a = self.lines[x][self.lines[x].index(b)-1]
+        else:
+            a = self.lines[x][self.lines[x].index(b)+1]
+        x = point_on_same_line(self.lines, c, b)
+        if self.lines[x].index(c) < self.lines[x].index(b):
+            c = self.lines[x][self.lines[x].index(b)-1]
+        else:
+            c = self.lines[x][self.lines[x].index(b)+1]
+        if a > c:
+            a, c = c, a
+        return chr(a+ord("A"))+chr(b+ord("A"))+chr(c+ord("A"))
     def on_selection(self, event):
         if self.selection_string in self.property_data.keys():
             sub = self.property_data[self.selection_string][1]
             if self.selected_option2.get() in sub.keys():
                 self.entry_var2.set(sub[self.selected_option2.get()])
+    def search_angle_solve(self):
+        total_var = []
+        for item in self.empty_list_1:
+            total_var += item
+        for item in self.empty_list_2:
+            total_var += item
+        total_var = list(set(total_var))
+        known_count = 0
+        for item in total_var:
+            if item in self.all_angle and item not in self.permute_list:
+                known_count += 1
+            elif "angle "+item in self.property_data.keys():
+                check_string = self.property_data["angle "+item]
+                for fx in limit.function_full_name_list:
+                    check_string.replace(fx, "")
+                if any(chr(ord("a")+i) in check_string for i in range(26)):
+                    continue
+                known_count += 1
+        empty_length = len(self.empty_list_1)+len(self.empty_list_2)
+        if empty_length > len(self.best_1)+len(self.best_2) and empty_length == len(total_var)-known_count:
+            self.best_1 = copy.deepcopy(self.empty_list_1)
+            self.best_2 = copy.deepcopy(self.empty_list_2)
+        for i in range(len(self.angle_list)-1,-1,-1):
+            tmp = self.angle_list.pop(-1)
+            self.empty_list_1.append(tmp)
+            self.search_angle_solve()
+            self.angle_list.append(tmp)
+            self.empty_list_1.pop(-1)
+        for i in range(len(self.body_find_cycle_list)-1,-1,-1):
+            tmp = self.body_find_cycle_list.pop(-1)
+            self.empty_list_2.append(tmp)
+            self.search_angle_solve()
+            self.body_find_cycle_list.append(tmp)
+            self.empty_list_2.pop(-1)
     def compile_fx(self):
         A = (self.points[0][0], self.points[0][1])
         B = (self.points[1][0], self.points[1][1])
@@ -291,7 +342,9 @@ class DrawingApp:
             if len(sub_list) > 1:
                 tmp = [item[0]+chr(ord("A")+i)+item[1] for item in list(itertools.permutations(sub_list, 2)) if ord(item[0])<ord(item[1])]
                 angle_list += tmp
-            #print_better(sub_list)
+        all_angle = copy.copy(angle_list)
+        self.all_angle = all_angle
+        print(angle_list)
         print_better(self.lines)
         for i in range(len(self.points)):
             self.canvas.create_text(self.points[i][0], self.points[i][1], text=chr(ord("A")+i), font=("Arial", 16), fill="blue")
@@ -305,10 +358,12 @@ class DrawingApp:
                 permute_list.pop(i)
         permute_list = sorted(permute_list, key=lambda angle: angle_val(angle, self.lines, self.points))
         permute_list = [chr(ord("A")+perm[0])+chr(ord("A")+perm[1])+chr(ord("A")+perm[2]) for perm in permute_list]
+        self.permute_list = permute_list
         print(permute_list)
         angle_list = [list(comb) for comb in itertools.combinations(angle_list, 3) if comb[0][1]==comb[1][1] and comb[1][1]==comb[2][1] and len(set(comb[0]+comb[1]+comb[2]))==4]
         for i in range(len(angle_list)):
             angle_list[i] = sorted(angle_list[i], key=lambda angle: sort_for_add(angle, permute_list, self.lines))
+        self.angle_list = angle_list
         print(angle_list)
         body_find = Graph()
         for i in range(len(self.lines)):
@@ -318,6 +373,19 @@ class DrawingApp:
         for i in range(len(body_find.cycles)):
             body_find.cycles[i] = ''.join(body_find.cycles[i])
         body_find.cycles = [v1 for i, v1 in enumerate(body_find.cycles) if not any(set(v1)==set(v2) for v2 in body_find.cycles[:i])]
+        for i in range(len(body_find.cycles)):
+            str_look = body_find.cycles[i] + body_find.cycles[i][:2]
+            index_list = []
+            for j in range(len(body_find.cycles[i])):
+                if self.convert_to_valid(str_look[j:j+3]) not in permute_list:
+                    index_list.append(j+1)
+            body_find.cycles[i] = list(body_find.cycles[i])
+            print(body_find.cycles[i], index_list)
+            index_list = sorted(index_list)
+            for j in range(len(index_list)-1,-1,-1):
+                body_find.cycles[i].pop(index_list[j])
+            body_find.cycles[i] = "".join(body_find.cycles[i])
+        print(body_find.cycles)
         for i in range(len(body_find.cycles)-1,-1,-1):
             test = list(body_find.cycles[i])
             decision_remove = False
@@ -329,9 +397,64 @@ class DrawingApp:
                     break
             if decision_remove is True:
                 body_find.cycles.pop(i)
-        body_find_cycle_list = body_find.cycles
-        #for item 
-        print(body_find.cycles)
+        body_find_cycle_list = []
+        for item in body_find.cycles:
+            body_find_cycle_list.append([])
+            item_2 = item + item[:2]
+            for i in range(len(item)):
+                body_find_cycle_list[-1].append(self.convert_to_valid(item_2[i:i+3]))
+            body_find_cycle_list[-1] = [angle if angle in all_angle else angle[::-1] for angle in body_find_cycle_list[-1] if angle in all_angle or angle[::-1] in all_angle]
+        self.body_find_cycle_list = body_find_cycle_list
+        print(body_find_cycle_list)
+        self.empty_list_1 = []
+        self.empty_list_2 = []
+        self.best_1 = []
+        self.best_2 = []
+        copy_data = copy.deepcopy(self.property_data)
+        for key in copy_data.keys():
+            key_name= key[len("angle "):]
+            if key_name not in all_angle:
+                self.property_data["angle "+self.convert_to_valid(key_name)] = self.property_data[key]
+                del self.property_data[key]
+        print(self.property_data)
+        self.search_angle_solve()
+        print()
+        print(self.best_1, self.best_2)
+        list_unknown = []
+        for item in self.best_1:
+            list_unknown += item
+        for item in self.best_2:
+            list_unknown += item
+        list_unknown = [item for item in list_unknown if item in permute_list and "angle "+item not in self.property_data.keys()]
+        list_unknown = list(set(list_unknown))
+        #print(list_unknown)
+        total_string = ""
+        for item in self.property_data.keys():
+            total_string += self.property_data[item]
+        for fx in limit.function_full_name_list:
+            total_string.replace(fx, "")
+        total_string = total_string.lower()
+        letter = None
+        for i in range(26):
+            if chr(ord("a")+i) in total_string:
+                letter = chr(ord("a")+i+1)
+        for i in range(len(self.best_1)):
+            for j in range(len(self.best_1[i])):
+                if self.best_1[i][j] not in permute_list:
+                    self.best_1[i][j] = "rad(180)"
+                elif "angle "+self.best_1[i][j] in self.property_data.keys():
+                    self.best_1[i][j] = self.property_data["angle "+self.best_1[i][j]]
+                else:
+                    self.best_1[i][j] = chr(ord(letter) + list_unknown.index(self.best_1[i][j]))
+                    letter = chr(ord(letter)+1)
+        for i in range(len(self.best_2)):
+            for j in range(len(self.best_2[i])):
+                if "angle "+self.best_2[i][j] in self.property_data.keys():
+                    self.best_2[i][j] = self.property_data["angle "+self.best_2[i][j]]
+                else:
+                    self.best_2[i][j] = chr(ord(letter) + list_unknown.index(self.best_2[i][j]))
+                    letter = chr(ord(letter)+1)
+        print(self.best_1, self.best_2)
     def open_new_window(self):
         new_window = tk.Toplevel(self.root)
         selected_mode = self.option_var.get()
