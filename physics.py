@@ -1,4 +1,4 @@
-import limit
+import math_ai
 import copy
 from collections import defaultdict
 import tkinter as tk
@@ -9,15 +9,18 @@ import itertools
 
 from shapely.geometry import LineString, Point, Polygon
 
+
 def approx_eq(x1, y1, x2, y2):
-    if abs(x2-x1)<10 and abs(y2-y1)<10:
+    if abs(x2 - x1) < 10 and abs(y2 - y1) < 10:
         return True
     return False
 
+
 def between(a, b, c):
-    if ((a-1) < b and b < (c+1)) or ((c-1) < b and b < (a+1)):
+    if ((a - 1) < b and b < (c + 1)) or ((c - 1) < b and b < (a + 1)):
         return True
     return False
+
 
 def common_point_handle(x1, y1, x2, y2, x3, y3, x4, y4):
     if approx_eq(x1, y1, x3, y3):
@@ -28,6 +31,7 @@ def common_point_handle(x1, y1, x2, y2, x3, y3, x4, y4):
         return between(x1, x2, x4) and between(y1, y2, y4)
     elif approx_eq(x2, y2, x4, y4):
         return between(x1, x2, x3) and between(y1, y2, y3)
+
 
 def common_point(x1, y1, x2, y2, x3, y3, x4, y4):
     if approx_eq(x1, y1, x3, y3):
@@ -40,34 +44,46 @@ def common_point(x1, y1, x2, y2, x3, y3, x4, y4):
         return (x3, y3)
     return None
 
+
 def find_polygon(lines, curr_point, history, i_hist):
     tmp = None
     for i in range(len(lines)):
         if curr_point in lines[i]:
             for j in range(len(lines[i])):
                 if curr_point == lines[i][j]:
-                    if j+1 != len(lines[i]):
-                        if lines[i][j+1] not in history:
-                            tmp = find_polygon(lines, lines[i][j+1], history + [curr_point], i_hist + [i])
+                    if j + 1 != len(lines[i]):
+                        if lines[i][j + 1] not in history:
+                            tmp = find_polygon(
+                                lines,
+                                lines[i][j + 1],
+                                history + [curr_point],
+                                i_hist + [i],
+                            )
                             if tmp is not None:
                                 return tmp + [curr_point]
-                        elif history[0]==lines[i][j+1] and len(set(i_hist)) > 1:
+                        elif history[0] == lines[i][j + 1] and len(set(i_hist)) > 1:
                             return [curr_point]
-                    if j-1 != -1:
-                        if lines[i][j-1] not in history:
-                            tmp = find_polygon(lines, lines[i][j-1], history + [curr_point], i_hist + [i])
+                    if j - 1 != -1:
+                        if lines[i][j - 1] not in history:
+                            tmp = find_polygon(
+                                lines,
+                                lines[i][j - 1],
+                                history + [curr_point],
+                                i_hist + [i],
+                            )
                             if tmp is not None:
                                 return tmp + [curr_point]
-                        elif history[0]==lines[i][j-1] and len(set(i_hist)) > 1:
+                        elif history[0] == lines[i][j - 1] and len(set(i_hist)) > 1:
                             return [curr_point]
     return None
+
 
 def is_dup(lines, polygon):
     if len(polygon) == 3:
         return False
-    for i in range(len(polygon)-2):
-        for j in range(i+2, len(polygon)):
-            if i==0 and j==len(polygon)-1:
+    for i in range(len(polygon) - 2):
+        for j in range(i + 2, len(polygon)):
+            if i == 0 and j == len(polygon) - 1:
                 continue
             for k in range(len(lines)):
                 if (polygon[i] in lines[k]) and (polygon[j] in lines[k]):
@@ -76,8 +92,8 @@ def is_dup(lines, polygon):
                         if polygon[l] not in lines[k]:
                             count += 1
                             break
-                    if j != len(polygon)-1:
-                        for l in range(j+1, len(polygon)):
+                    if j != len(polygon) - 1:
+                        for l in range(j + 1, len(polygon)):
                             if count == 1 and (polygon[l] not in lines[k]):
                                 return True
                     if i != 0:
@@ -85,6 +101,7 @@ def is_dup(lines, polygon):
                             if count == 1 and (polygon[l] not in lines[k]):
                                 return True
     return False
+
 
 def find_all(lines, max_point):
     all_polygon = []
@@ -95,27 +112,31 @@ def find_all(lines, max_point):
                 all_polygon.append(tmp)
                 continue
             for i in range(len(all_polygon)):
-                if set(all_polygon[i])==set(tmp):
+                if set(all_polygon[i]) == set(tmp):
                     break
-                elif i == len(all_polygon)-1:
+                elif i == len(all_polygon) - 1:
                     all_polygon.append(tmp)
                     break
-    for i in range(len(all_polygon)-1, -1, -1):
+    for i in range(len(all_polygon) - 1, -1, -1):
         if is_dup(lines, all_polygon[i]):
             all_polygon.pop(i)
     return all_polygon
 
-def is_circle_line_segment_intersection(circle_center_x, circle_center_y, circle_radius, x1, y1, x2, y2):
+
+def is_circle_line_segment_intersection(
+    circle_center_x, circle_center_y, circle_radius, x1, y1, x2, y2
+):
     circle_center = Point(circle_center_x, circle_center_y)
     line_segment = LineString([(x1, y1), (x2, y2)])
     distance_to_line = circle_center.distance(line_segment)
     return distance_to_line <= circle_radius
 
+
 def find_extended_intersection(A, B, C, D):
     x1, y1 = A
     x2, y2 = B
     x3, y3 = C
-    x4, y4 = D    
+    x4, y4 = D
     if x2 - x1 != 0:
         m1 = (y2 - y1) / (x2 - x1)
         c1 = y1 - m1 * x1
@@ -142,7 +163,7 @@ def find_extended_intersection(A, B, C, D):
         y = m1 * x3 + c1
     elif m1 == m2:
         if c1 == c2:
-            #return "The lines are coincident and intersect at infinite points."
+            # return "The lines are coincident and intersect at infinite points."
             return None
         else:
             return None  # Lines are parallel and non-intersecting
@@ -150,13 +171,17 @@ def find_extended_intersection(A, B, C, D):
         x = (c2 - c1) / (m1 - m2)
         y = m1 * x + c1
     return (x, y)
+
+
 def print_better(input_given):
     print_line = []
     for i in range(len(input_given)):
         print_line.append([])
         for j in range(len(input_given[i])):
-            print_line[-1].append(chr(ord("A")+input_given[i][j]))
+            print_line[-1].append(chr(ord("A") + input_given[i][j]))
     print(print_line)
+
+
 def angle_val(angle, lines_arr, point_arr):
     val_1 = val_2 = None
     for i in range(len(lines_arr)):
@@ -165,42 +190,61 @@ def angle_val(angle, lines_arr, point_arr):
                 val_1 = np.array(point_arr[angle[0]]) - np.array(point_arr[angle[1]])
             elif angle[2] in lines_arr[i]:
                 val_2 = np.array(point_arr[angle[2]]) - np.array(point_arr[angle[1]])
-    return math.acos(np.dot(val_1, val_2)/(np.linalg.norm(val_1)*np.linalg.norm(val_2)))
+    return math.acos(
+        np.dot(val_1, val_2) / (np.linalg.norm(val_1) * np.linalg.norm(val_2))
+    )
+
+
 def check_drawn_angle_helper(lines_arr, angle):
     for i in range(len(lines_arr)):
-        if angle[0] in lines_arr[i] and angle[1] in lines_arr[i] and abs(lines_arr[i].index(angle[0]) - lines_arr[i].index(angle[1])) == 1:
+        if (
+            angle[0] in lines_arr[i]
+            and angle[1] in lines_arr[i]
+            and abs(lines_arr[i].index(angle[0]) - lines_arr[i].index(angle[1])) == 1
+        ):
             return i
     return None
+
+
 def point_on_same_line(lines_arr, point_1, point_2):
     for i in range(len(lines_arr)):
         if point_1 in lines_arr[i] and point_2 in lines_arr[i]:
             return i
     return None
+
+
 def check_drawn_angle(lines_arr, angle):
     a = check_drawn_angle_helper(lines_arr, angle[:2])
     b = check_drawn_angle_helper(lines_arr, angle[1:])
-    if  a is not None and b is not None and a!=b:
+    if a is not None and b is not None and a != b:
         return True
     else:
         return False
+
+
 def sort_for_add(angle, sorted_arr, lines_arr):
     for i in range(len(lines_arr)):
         cmp = set()
         for j in range(len(lines_arr[i])):
-            cmp.add(chr(ord("A")+lines_arr[i][j]))
+            cmp.add(chr(ord("A") + lines_arr[i][j]))
         if set(angle).issubset(cmp):
             return 999
     return sorted_arr.index(angle)
+
+
 class Graph:
     def __init__(self):
         self.graph = defaultdict(list)
         self.cycles = []
+
     def add_edge(self, u, v):
         self.graph[u].append(v)
         self.graph[v].append(u)
+
     def find_all_cycles(self):
         for node in self.graph:
             self.dfs(node, node, [])
+
     def dfs(self, start, current, path):
         path.append(current)
         for neighbor in self.graph[current]:
@@ -209,7 +253,8 @@ class Graph:
             elif neighbor == start and len(path) > 2:
                 self.cycles.append(list(path))
         path.pop()
-    
+
+
 class DrawingApp:
     def __init__(self, root):
         self.root = root
@@ -217,18 +262,39 @@ class DrawingApp:
         self.canvas = tk.Canvas(self.root, width=400, height=400, bg="white")
         self.canvas.pack()
         self.option_var = tk.StringVar(value="draw_mode")  # Default option selected
-        self.option_var.trace_add('write', self.on_radio_button_selected)
-        tk.Radiobutton(self.root, text="Draw Mode", variable=self.option_var, value="draw_mode").pack()
-        tk.Radiobutton(self.root, text="Surface Select", variable=self.option_var, value="surface_select").pack()
-        tk.Radiobutton(self.root, text="Object Select", variable=self.option_var, value="object_select").pack()
-        tk.Radiobutton(self.root, text="Angle Select", variable=self.option_var, value="angle_select").pack()
+        self.option_var.trace_add("write", self.on_radio_button_selected)
+        tk.Radiobutton(
+            self.root, text="Draw Mode", variable=self.option_var, value="draw_mode"
+        ).pack()
+        tk.Radiobutton(
+            self.root,
+            text="Surface Select",
+            variable=self.option_var,
+            value="surface_select",
+        ).pack()
+        tk.Radiobutton(
+            self.root,
+            text="Object Select",
+            variable=self.option_var,
+            value="object_select",
+        ).pack()
+        tk.Radiobutton(
+            self.root,
+            text="Angle Select",
+            variable=self.option_var,
+            value="angle_select",
+        ).pack()
         self.label_text = tk.StringVar(value="--none selected--")
         self.label = tk.Label(self.root, textvariable=self.label_text)
         self.label.pack()
         self.select_multiple_var = tk.BooleanVar(value=False)
-        self.select_multiple_checkbox = tk.Checkbutton(self.root, text="Select Multiple", variable=self.select_multiple_var)
+        self.select_multiple_checkbox = tk.Checkbutton(
+            self.root, text="Select Multiple", variable=self.select_multiple_var
+        )
         self.select_multiple_checkbox.pack()
-        self.new_window_button = tk.Button(self.root, text="Properties", command=self.open_new_window)
+        self.new_window_button = tk.Button(
+            self.root, text="Properties", command=self.open_new_window
+        )
         self.new_window_button.pack()
         self.final_button = tk.Button(self.root, text="Solve", command=self.compile_fx)
         self.final_button.pack()
@@ -245,41 +311,49 @@ class DrawingApp:
         self.canvas.bind("<B1-Motion>", self.on_left_drag)
         self.canvas.bind("<ButtonRelease-1>", self.on_left_release)
         self.canvas.bind("<Button-3>", self.on_right_click)
+
     def apply_properties(self):
         sub = {}
         if self.selection_string in self.property_data.keys():
             sub = self.property_data[self.selection_string][1]
-            sub.update({self.selected_option2.get() : self.entry_var2.get()})
-        self.property_data.update({self.selection_string : [self.entry_var.get(), sub]})
+            sub.update({self.selected_option2.get(): self.entry_var2.get()})
+        self.property_data.update({self.selection_string: [self.entry_var.get(), sub]})
         print(self.property_data)
-        
+
     def apply_properties_2(self):
-        self.property_data.update({self.selection_string : self.checkbox_var.get()})
-        print(self.property_data) 
+        self.property_data.update({self.selection_string: self.checkbox_var.get()})
+        print(self.property_data)
 
     def apply_properties_3(self):
-        self.property_data.update({self.selection_string : self.entry_var3.get()})
-        print(self.property_data) 
+        self.property_data.update({self.selection_string: self.entry_var3.get()})
+        print(self.property_data)
+
     def convert_to_valid(self, angle):
-        a, b, c = ord(angle[0])-ord("A"), ord(angle[1])-ord("A"), ord(angle[2])-ord("A")
+        a, b, c = (
+            ord(angle[0]) - ord("A"),
+            ord(angle[1]) - ord("A"),
+            ord(angle[2]) - ord("A"),
+        )
         x = point_on_same_line(self.lines, a, b)
         if self.lines[x].index(a) < self.lines[x].index(b):
-            a = self.lines[x][self.lines[x].index(b)-1]
+            a = self.lines[x][self.lines[x].index(b) - 1]
         else:
-            a = self.lines[x][self.lines[x].index(b)+1]
+            a = self.lines[x][self.lines[x].index(b) + 1]
         x = point_on_same_line(self.lines, c, b)
         if self.lines[x].index(c) < self.lines[x].index(b):
-            c = self.lines[x][self.lines[x].index(b)-1]
+            c = self.lines[x][self.lines[x].index(b) - 1]
         else:
-            c = self.lines[x][self.lines[x].index(b)+1]
+            c = self.lines[x][self.lines[x].index(b) + 1]
         if a > c:
             a, c = c, a
-        return chr(a+ord("A"))+chr(b+ord("A"))+chr(c+ord("A"))
+        return chr(a + ord("A")) + chr(b + ord("A")) + chr(c + ord("A"))
+
     def on_selection(self, event):
         if self.selection_string in self.property_data.keys():
             sub = self.property_data[self.selection_string][1]
             if self.selected_option2.get() in sub.keys():
                 self.entry_var2.set(sub[self.selected_option2.get()])
+
     def search_angle_solve(self):
         total_var = []
         for item in self.empty_list_1:
@@ -291,29 +365,35 @@ class DrawingApp:
         for item in total_var:
             if item in self.all_angle and item not in self.permute_list:
                 known_count += 1
-            elif "angle "+item in self.property_data.keys():
-                check_string = self.property_data["angle "+item]
-                for fx in limit.function_full_name_list:
+            elif "angle " + item in self.property_data.keys():
+                check_string = self.property_data["angle " + item]
+                for fx in math_ai.function_full_name_list:
                     check_string.replace(fx, "")
-                if any(chr(ord("a")+i) in check_string for i in range(26)):
+                if any(chr(ord("a") + i) in check_string for i in range(26)):
                     continue
                 known_count += 1
-        empty_length = len(self.empty_list_1)+len(self.empty_list_2)
-        if empty_length > len(self.best_1)+len(self.best_2) and empty_length == len(total_var)-known_count:
+        empty_length = len(self.empty_list_1) + len(self.empty_list_2)
+        if (
+            empty_length > len(self.best_1) + len(self.best_2)
+            and empty_length == len(total_var) - known_count
+        ):
             self.best_1 = copy.deepcopy(self.empty_list_1)
             self.best_2 = copy.deepcopy(self.empty_list_2)
-        for i in range(len(self.angle_list)-1,-1,-1):
-            tmp = self.angle_list.pop(-1)
+        for i in range(len(self.angle_list)):
+            tmp = self.angle_list[i]
+            if tmp in self.empty_list_1:
+                continue
             self.empty_list_1.append(tmp)
             self.search_angle_solve()
-            self.angle_list.append(tmp)
             self.empty_list_1.pop(-1)
-        for i in range(len(self.body_find_cycle_list)-1,-1,-1):
-            tmp = self.body_find_cycle_list.pop(-1)
+        for i in range(len(self.body_find_cycle_list)):
+            tmp = self.body_find_cycle_list[i]
+            if tmp in self.empty_list_2:
+                continue
             self.empty_list_2.append(tmp)
             self.search_angle_solve()
-            self.body_find_cycle_list.append(tmp)
             self.empty_list_2.pop(-1)
+
     def compile_fx(self):
         A = (self.points[0][0], self.points[0][1])
         B = (self.points[1][0], self.points[1][1])
@@ -329,70 +409,112 @@ class DrawingApp:
             if distance_2 < distance_1:
                 self.lines[i].reverse()
         print()
-        angle_list= []
+        angle_list = []
         for i in range(len(self.points)):
             sub_list = []
             for j in range(len(self.lines)):
                 if i in self.lines[j]:
-                    pos = self.lines[j].index(i) 
-                    if pos != len(self.lines[j])-1:
-                        sub_list.append(chr(ord("A")+self.lines[j][pos+1]))
+                    pos = self.lines[j].index(i)
+                    if pos != len(self.lines[j]) - 1:
+                        sub_list.append(chr(ord("A") + self.lines[j][pos + 1]))
                     if pos != 0:
-                        sub_list.append(chr(ord("A")+self.lines[j][pos-1]))
+                        sub_list.append(chr(ord("A") + self.lines[j][pos - 1]))
             if len(sub_list) > 1:
-                tmp = [item[0]+chr(ord("A")+i)+item[1] for item in list(itertools.permutations(sub_list, 2)) if ord(item[0])<ord(item[1])]
+                tmp = [
+                    item[0] + chr(ord("A") + i) + item[1]
+                    for item in list(itertools.permutations(sub_list, 2))
+                    if ord(item[0]) < ord(item[1])
+                ]
                 angle_list += tmp
         all_angle = copy.copy(angle_list)
         self.all_angle = all_angle
-        print(angle_list)
+        print("all possible angle:", angle_list)
         print_better(self.lines)
         for i in range(len(self.points)):
-            self.canvas.create_text(self.points[i][0], self.points[i][1], text=chr(ord("A")+i), font=("Arial", 16), fill="blue")
+            self.canvas.create_text(
+                self.points[i][0],
+                self.points[i][1],
+                text=chr(ord("A") + i),
+                font=("Arial", 16),
+                fill="blue",
+            )
         permute_list = []
         for i in range(len(self.points)):
             permute_list.append(i)
         permute_list = list(itertools.permutations(permute_list, 3))
-        permute_list = [list(perm) for perm in permute_list if (len(set(perm))==len(perm) and perm[0]<perm[2])]
-        for i in range(len(permute_list)-1, -1, -1):
+        permute_list = [
+            list(perm)
+            for perm in permute_list
+            if (len(set(perm)) == len(perm) and perm[0] < perm[2])
+        ]
+        for i in range(len(permute_list) - 1, -1, -1):
             if check_drawn_angle(self.lines, permute_list[i]) is False:
                 permute_list.pop(i)
-        permute_list = sorted(permute_list, key=lambda angle: angle_val(angle, self.lines, self.points))
-        permute_list = [chr(ord("A")+perm[0])+chr(ord("A")+perm[1])+chr(ord("A")+perm[2]) for perm in permute_list]
+        permute_list = sorted(
+            permute_list, key=lambda angle: angle_val(angle, self.lines, self.points)
+        )
+        permute_list = [
+            chr(ord("A") + perm[0]) + chr(ord("A") + perm[1]) + chr(ord("A") + perm[2])
+            for perm in permute_list
+        ]
         self.permute_list = permute_list
-        print(permute_list)
-        angle_list = [list(comb) for comb in itertools.combinations(angle_list, 3) if comb[0][1]==comb[1][1] and comb[1][1]==comb[2][1] and len(set(comb[0]+comb[1]+comb[2]))==4]
+        print("all possible non 180 angle:", permute_list)
+        angle_list = [
+            list(comb)
+            for comb in itertools.combinations(angle_list, 3)
+            if comb[0][1] == comb[1][1]
+            and comb[1][1] == comb[2][1]
+            and len(set(comb[0] + comb[1] + comb[2])) == 4
+        ]
         for i in range(len(angle_list)):
-            angle_list[i] = sorted(angle_list[i], key=lambda angle: sort_for_add(angle, permute_list, self.lines))
+            angle_list[i] = sorted(
+                angle_list[i],
+                key=lambda angle: sort_for_add(angle, permute_list, self.lines),
+            )
         self.angle_list = angle_list
-        print(angle_list)
+        print("complementary angles:", angle_list)
         body_find = Graph()
         for i in range(len(self.lines)):
-            for j in range(len(self.lines[i])-1):
-                body_find.add_edge(chr(ord("A")+self.lines[i][j]), chr(ord("A")+self.lines[i][j+1]))
+            for j in range(len(self.lines[i]) - 1):
+                body_find.add_edge(
+                    chr(ord("A") + self.lines[i][j]),
+                    chr(ord("A") + self.lines[i][j + 1]),
+                )
         body_find.find_all_cycles()
         for i in range(len(body_find.cycles)):
-            body_find.cycles[i] = ''.join(body_find.cycles[i])
-        body_find.cycles = [v1 for i, v1 in enumerate(body_find.cycles) if not any(set(v1)==set(v2) for v2 in body_find.cycles[:i])]
+            body_find.cycles[i] = "".join(body_find.cycles[i])
+        body_find.cycles = [
+            v1
+            for i, v1 in enumerate(body_find.cycles)
+            if not any(set(v1) == set(v2) for v2 in body_find.cycles[:i])
+        ]
         for i in range(len(body_find.cycles)):
             str_look = body_find.cycles[i] + body_find.cycles[i][:2]
             index_list = []
             for j in range(len(body_find.cycles[i])):
-                if self.convert_to_valid(str_look[j:j+3]) not in permute_list:
-                    index_list.append(j+1)
+                if self.convert_to_valid(str_look[j : j + 3]) not in permute_list:
+                    index_list.append(j + 1)
             body_find.cycles[i] = list(body_find.cycles[i])
-            print(body_find.cycles[i], index_list)
             index_list = sorted(index_list)
-            for j in range(len(index_list)-1,-1,-1):
+            for j in range(len(index_list) - 1, -1, -1):
                 body_find.cycles[i].pop(index_list[j])
             body_find.cycles[i] = "".join(body_find.cycles[i])
-        print(body_find.cycles)
-        for i in range(len(body_find.cycles)-1,-1,-1):
+        print("all possible bodies:", body_find.cycles)
+        for i in range(len(body_find.cycles) - 1, -1, -1):
             test = list(body_find.cycles[i])
             decision_remove = False
             for comb in itertools.combinations(test, 2):
-                if abs(test.index(comb[0])-test.index(comb[1]))==1 or abs(test.index(comb[0])-test.index(comb[1]))==len(test)-1:
+                if (
+                    abs(test.index(comb[0]) - test.index(comb[1])) == 1
+                    or abs(test.index(comb[0]) - test.index(comb[1])) == len(test) - 1
+                ):
                     continue
-                if point_on_same_line(self.lines, ord(comb[0])-ord("A"), ord(comb[1])-ord("A")) is not None:
+                if (
+                    point_on_same_line(
+                        self.lines, ord(comb[0]) - ord("A"), ord(comb[1]) - ord("A")
+                    )
+                    is not None
+                ):
                     decision_remove = True
                     break
             if decision_remove is True:
@@ -402,21 +524,29 @@ class DrawingApp:
             body_find_cycle_list.append([])
             item_2 = item + item[:2]
             for i in range(len(item)):
-                body_find_cycle_list[-1].append(self.convert_to_valid(item_2[i:i+3]))
-            body_find_cycle_list[-1] = [angle if angle in all_angle else angle[::-1] for angle in body_find_cycle_list[-1] if angle in all_angle or angle[::-1] in all_angle]
+                body_find_cycle_list[-1].append(
+                    self.convert_to_valid(item_2[i : i + 3])
+                )
+            body_find_cycle_list[-1] = [
+                angle if angle in all_angle else angle[::-1]
+                for angle in body_find_cycle_list[-1]
+                if angle in all_angle or angle[::-1] in all_angle
+            ]
         self.body_find_cycle_list = body_find_cycle_list
-        print(body_find_cycle_list)
+        print("simple bodies:", body_find_cycle_list)
         self.empty_list_1 = []
         self.empty_list_2 = []
         self.best_1 = []
         self.best_2 = []
         copy_data = copy.deepcopy(self.property_data)
         for key in copy_data.keys():
-            key_name= key[len("angle "):]
+            key_name = key[len("angle ") :]
             if key_name not in all_angle:
-                self.property_data["angle "+self.convert_to_valid(key_name)] = self.property_data[key]
+                self.property_data[
+                    "angle " + self.convert_to_valid(key_name)
+                ] = self.property_data[key]
                 del self.property_data[key]
-        print(self.property_data)
+        print("math input:", self.property_data)
         self.search_angle_solve()
         print()
         print(self.best_1, self.best_2)
@@ -425,36 +555,45 @@ class DrawingApp:
             list_unknown += item
         for item in self.best_2:
             list_unknown += item
-        list_unknown = [item for item in list_unknown if item in permute_list and "angle "+item not in self.property_data.keys()]
+        list_unknown = [
+            item
+            for item in list_unknown
+            if item in permute_list and "angle " + item not in self.property_data.keys()
+        ]
         list_unknown = list(set(list_unknown))
-        #print(list_unknown)
+        # print(list_unknown)
         total_string = ""
         for item in self.property_data.keys():
             total_string += self.property_data[item]
-        for fx in limit.function_full_name_list:
+        for fx in math_ai.function_full_name_list:
             total_string.replace(fx, "")
         total_string = total_string.lower()
         letter = None
         for i in range(26):
-            if chr(ord("a")+i) in total_string:
-                letter = chr(ord("a")+i+1)
+            if chr(ord("a") + i) in total_string:
+                letter = chr(ord("a") + i + 1)
         for i in range(len(self.best_1)):
             for j in range(len(self.best_1[i])):
                 if self.best_1[i][j] not in permute_list:
                     self.best_1[i][j] = "rad(180)"
-                elif "angle "+self.best_1[i][j] in self.property_data.keys():
-                    self.best_1[i][j] = self.property_data["angle "+self.best_1[i][j]]
+                elif "angle " + self.best_1[i][j] in self.property_data.keys():
+                    self.best_1[i][j] = self.property_data["angle " + self.best_1[i][j]]
                 else:
-                    self.best_1[i][j] = chr(ord(letter) + list_unknown.index(self.best_1[i][j]))
-                    letter = chr(ord(letter)+1)
+                    self.best_1[i][j] = chr(
+                        ord(letter) + list_unknown.index(self.best_1[i][j])
+                    )
+                    letter = chr(ord(letter) + 1)
         for i in range(len(self.best_2)):
             for j in range(len(self.best_2[i])):
-                if "angle "+self.best_2[i][j] in self.property_data.keys():
-                    self.best_2[i][j] = self.property_data["angle "+self.best_2[i][j]]
+                if "angle " + self.best_2[i][j] in self.property_data.keys():
+                    self.best_2[i][j] = self.property_data["angle " + self.best_2[i][j]]
                 else:
-                    self.best_2[i][j] = chr(ord(letter) + list_unknown.index(self.best_2[i][j]))
-                    letter = chr(ord(letter)+1)
+                    self.best_2[i][j] = chr(
+                        ord(letter) + list_unknown.index(self.best_2[i][j])
+                    )
+                    letter = chr(ord(letter) + 1)
         print(self.best_1, self.best_2)
+
     def open_new_window(self):
         new_window = tk.Toplevel(self.root)
         selected_mode = self.option_var.get()
@@ -465,13 +604,7 @@ class DrawingApp:
         elif selected_mode == "angle_select":
             new_window.title("Properties " + "(" + self.selection_string + ")")
         new_window.geometry("300x200")
-        if  selected_mode == "object_select":
-            #options = ["Point Mass", "Rigid Mass"]
-            #self.selected_option = tk.StringVar()
-            #dropdown = ttk.Combobox(new_window, values=options, textvariable=self.selected_option, state="readonly")
-            #dropdown.pack()
-            #self.checkbox_var2 = tk.BooleanVar()
-            #tk.Checkbutton(new_window, text="Valid Body", variable=self.checkbox_var2).pack()
+        if selected_mode == "object_select":
             label = tk.Label(new_window, text="Mass")
             label.pack()
             self.entry_var = tk.StringVar()
@@ -486,12 +619,15 @@ class DrawingApp:
             work = list(itertools.product(work, [" - pos", " - vec", " - acc"]))
             work_2 = []
             for i in range(len(work)):
-                work_2.append(work[i][0]+work[i][1])
-            #print(work_2)
-            #options2 = ["Ground"]
+                work_2.append(work[i][0] + work[i][1])
             options2 = work_2
             self.selected_option2 = tk.StringVar()
-            dropdown2 = ttk.Combobox(new_window, values=options2, textvariable=self.selected_option2, state="readonly")
+            dropdown2 = ttk.Combobox(
+                new_window,
+                values=options2,
+                textvariable=self.selected_option2,
+                state="readonly",
+            )
             dropdown2.pack()
             dropdown2.bind("<<ComboboxSelected>>", self.on_selection)
             self.entry_var2 = tk.StringVar()
@@ -502,8 +638,6 @@ class DrawingApp:
             if self.selection_string in self.property_data.keys():
                 tmp = self.property_data[self.selection_string]
                 self.entry_var.set(tmp[0])
-                #self.selected_option2.set(tmp[1])
-                #self.entry_var2.set(tmp[2])
         elif selected_mode == "surface_select":
             self.checkbox_var = tk.BooleanVar()
             tk.Checkbutton(new_window, text="Glued", variable=self.checkbox_var).pack()
@@ -516,10 +650,13 @@ class DrawingApp:
             self.entry_var3 = tk.StringVar()
             entry = tk.Entry(new_window, textvariable=self.entry_var3)
             entry.pack()
-            button = tk.Button(new_window, text="Apply", command=self.apply_properties_3)
+            button = tk.Button(
+                new_window, text="Apply", command=self.apply_properties_3
+            )
             button.pack()
             if self.selection_string in self.property_data.keys():
                 self.entry_var3.set(self.property_data[self.selection_string])
+
     def on_radio_button_selected(self, *args):
         selected_option = self.option_var.get()
         self.label_text.set("--none selected--")
@@ -529,7 +666,7 @@ class DrawingApp:
             self.select_multiple_checkbox.config(state="disabled")
         elif selected_option == "surface_select" or selected_option == "angle_select":
             self.select_multiple_checkbox.config(state="normal")
-        
+
     def draw_initial_line(self):
         self.new_window_button.configure(state="disabled")
         self.select_multiple_checkbox.config(state="disabled")
@@ -540,7 +677,7 @@ class DrawingApp:
         self.points.append([x2, y2])
         self.canvas.create_oval(x2 - 2, y2 - 2, x2 + 2, y2 + 2, fill="red")
         self.lines.append([0, 1])
-        
+
     def on_left_click(self, event):
         selected_mode = self.option_var.get()
         if selected_mode == "draw_mode":
@@ -558,18 +695,40 @@ class DrawingApp:
                 x, y = event.x, event.y
                 if self.current_line is not None:
                     self.canvas.delete(self.current_line)
-                self.current_line = self.canvas.create_line(self.points[self.start_point][0], self.points[self.start_point][1], x, y, width=2, fill="black")
+                self.current_line = self.canvas.create_line(
+                    self.points[self.start_point][0],
+                    self.points[self.start_point][1],
+                    x,
+                    y,
+                    width=2,
+                    fill="black",
+                )
 
     def on_left_release(self, event):
         selected_mode = self.option_var.get()
         if selected_mode == "draw_mode" and self.start_point is not None:
             for i in range(len(self.lines)):
-                for j in range(len(self.lines[i])-1):
-                    [x1, y1], [x2, y2], [x3, y3], [x4, y4] = self.points[self.start_point], [event.x, event.y], self.points[self.lines[i][j]], self.points[self.lines[i][j+1]]
+                for j in range(len(self.lines[i]) - 1):
+                    [x1, y1], [x2, y2], [x3, y3], [x4, y4] = (
+                        self.points[self.start_point],
+                        [event.x, event.y],
+                        self.points[self.lines[i][j]],
+                        self.points[self.lines[i][j + 1]],
+                    )
                     tmp = common_point(x1, y1, x2, y2, x3, y3, x4, y4)
                     if tmp is not None:
-                        if abs(x1*(y2-tmp[1])+x2*(tmp[1]-y1)+tmp[0]*(y1-y2)) < 500:
-                            if common_point_handle(x1, y1, x2, y2, x3, y3, x4, y4) == False:
+                        if (
+                            abs(
+                                x1 * (y2 - tmp[1])
+                                + x2 * (tmp[1] - y1)
+                                + tmp[0] * (y1 - y2)
+                            )
+                            < 500
+                        ):
+                            if (
+                                common_point_handle(x1, y1, x2, y2, x3, y3, x4, y4)
+                                == False
+                            ):
                                 if self.current_line is not None:
                                     self.canvas.delete(self.current_line)
                                 self.current_line = None
@@ -591,17 +750,28 @@ class DrawingApp:
                         print(self.lines)
                         return
             self.points.append([event.x, event.y])
-            self.lines.append([len(self.points)-1, self.start_point])
-            self.canvas.create_oval(event.x - 2, event.y - 2, event.x + 2, event.y + 2, fill="red")
+            self.lines.append([len(self.points) - 1, self.start_point])
+            self.canvas.create_oval(
+                event.x - 2, event.y - 2, event.x + 2, event.y + 2, fill="red"
+            )
             self.current_line = None
             print(self.lines)
         elif selected_mode == "surface_select":
             for i in range(len(self.lines)):
-                for j in range(len(self.lines[i])-1):
-                    [x1, y1], [x2, y2], [x3, y3] = self.points[self.lines[i][j]], self.points[self.lines[i][j+1]], [event.x, event.y]
+                for j in range(len(self.lines[i]) - 1):
+                    [x1, y1], [x2, y2], [x3, y3] = (
+                        self.points[self.lines[i][j]],
+                        self.points[self.lines[i][j + 1]],
+                        [event.x, event.y],
+                    )
                     if is_circle_line_segment_intersection(x3, y3, 2, x1, y1, x2, y2):
-                        label_string = chr(ord("A")+self.lines[i][j])+chr(ord("A")+self.lines[i][j+1])
-                        if self.selection_string is not None and self.select_multiple_var.get():
+                        label_string = chr(ord("A") + self.lines[i][j]) + chr(
+                            ord("A") + self.lines[i][j + 1]
+                        )
+                        if (
+                            self.selection_string is not None
+                            and self.select_multiple_var.get()
+                        ):
                             self.selection_string += " + " + label_string
                         else:
                             self.selection_string = label_string
@@ -613,25 +783,41 @@ class DrawingApp:
             for i in range(len(all_polygon)):
                 tmp = []
                 for j in range(len(all_polygon[i])):
-                    tmp.append((self.points[all_polygon[i][j]][0], self.points[all_polygon[i][j]][1]))
+                    tmp.append(
+                        (
+                            self.points[all_polygon[i][j]][0],
+                            self.points[all_polygon[i][j]][1],
+                        )
+                    )
                 print(tmp)
                 if Polygon(LineString(tmp)).contains(Point(event.x, event.y)):
                     label_string = ""
                     for j in range(len(all_polygon[i])):
-                        label_string += chr(ord("A")+all_polygon[i][j])
+                        label_string += chr(ord("A") + all_polygon[i][j])
                     self.selection_type = "object"
                     self.selection_string = label_string
                     self.new_window_button.configure(state="normal")
                     self.label_text.set(label_string)
         elif selected_mode == "angle_select":
             label_list = []
-            for i in range(len(self.lines)-1):
-                for j in range(i+1, len(self.lines)):
-                    intersect_point = set(self.lines[i]).intersection(set(self.lines[j]))
+            for i in range(len(self.lines) - 1):
+                for j in range(i + 1, len(self.lines)):
+                    intersect_point = set(self.lines[i]).intersection(
+                        set(self.lines[j])
+                    )
                     print(intersect_point)
                     for k in list(intersect_point):
                         print(self.lines)
-                        x1, y1, x2, y2, x3, y3, x4, y4 = None, None, None, None, None, None, None, None
+                        x1, y1, x2, y2, x3, y3, x4, y4 = (
+                            None,
+                            None,
+                            None,
+                            None,
+                            None,
+                            None,
+                            None,
+                            None,
+                        )
                         if k != self.lines[i][0]:
                             [x1, y1] = self.points[self.lines[i][0]]
                         if k != self.lines[i][-1]:
@@ -641,22 +827,101 @@ class DrawingApp:
                         if k != self.lines[j][-1]:
                             [x4, y4] = self.points[self.lines[j][-1]]
                         label_string = None
-                        if (x1 is not None) and (x3 is not None) and Polygon(LineString([(self.points[k][0], self.points[k][1]), (x1, y1), (x3, y3)])).contains(Point(event.x, event.y)) and abs(self.points[k][0] - event.x) <= 25 and abs(self.points[k][1] - event.y) <= 25:
-                            label_string = chr(ord("A")+self.lines[j][0]) + chr(ord("A")+k) + chr(ord("A")+self.lines[i][0])
-                        elif (x1 is not None) and (x4 is not None) and Polygon(LineString([(self.points[k][0], self.points[k][1]), (x1, y1), (x4, y4)])).contains(Point(event.x, event.y)) and abs(self.points[k][0] - event.x) <= 25 and abs(self.points[k][1] - event.y) <= 25:
-                            label_string = chr(ord("A")+self.lines[j][-1]) + chr(ord("A")+k) + chr(ord("A")+self.lines[i][0])
-                        elif (x2 is not None) and (x3 is not None) and Polygon(LineString([(self.points[k][0], self.points[k][1]), (x2, y2), (x3, y3)])).contains(Point(event.x, event.y)) and abs(self.points[k][0] - event.x) <= 25 and abs(self.points[k][1] - event.y) <= 25:
-                            label_string = chr(ord("A")+self.lines[j][0]) + chr(ord("A")+k) + chr(ord("A")+self.lines[i][-1])
-                        elif (x2 is not None) and (x4 is not None) and Polygon(LineString([(self.points[k][0], self.points[k][1]), (x2, y2), (x4, y4)])).contains(Point(event.x, event.y)) and abs(self.points[k][0] - event.x) <= 25 and abs(self.points[k][1] - event.y) <= 25:
-                            label_string = chr(ord("A")+self.lines[j][-1]) + chr(ord("A")+k) + chr(ord("A")+self.lines[i][-1])
+                        if (
+                            (x1 is not None)
+                            and (x3 is not None)
+                            and Polygon(
+                                LineString(
+                                    [
+                                        (self.points[k][0], self.points[k][1]),
+                                        (x1, y1),
+                                        (x3, y3),
+                                    ]
+                                )
+                            ).contains(Point(event.x, event.y))
+                            and abs(self.points[k][0] - event.x) <= 25
+                            and abs(self.points[k][1] - event.y) <= 25
+                        ):
+                            label_string = (
+                                chr(ord("A") + self.lines[j][0])
+                                + chr(ord("A") + k)
+                                + chr(ord("A") + self.lines[i][0])
+                            )
+                        elif (
+                            (x1 is not None)
+                            and (x4 is not None)
+                            and Polygon(
+                                LineString(
+                                    [
+                                        (self.points[k][0], self.points[k][1]),
+                                        (x1, y1),
+                                        (x4, y4),
+                                    ]
+                                )
+                            ).contains(Point(event.x, event.y))
+                            and abs(self.points[k][0] - event.x) <= 25
+                            and abs(self.points[k][1] - event.y) <= 25
+                        ):
+                            label_string = (
+                                chr(ord("A") + self.lines[j][-1])
+                                + chr(ord("A") + k)
+                                + chr(ord("A") + self.lines[i][0])
+                            )
+                        elif (
+                            (x2 is not None)
+                            and (x3 is not None)
+                            and Polygon(
+                                LineString(
+                                    [
+                                        (self.points[k][0], self.points[k][1]),
+                                        (x2, y2),
+                                        (x3, y3),
+                                    ]
+                                )
+                            ).contains(Point(event.x, event.y))
+                            and abs(self.points[k][0] - event.x) <= 25
+                            and abs(self.points[k][1] - event.y) <= 25
+                        ):
+                            label_string = (
+                                chr(ord("A") + self.lines[j][0])
+                                + chr(ord("A") + k)
+                                + chr(ord("A") + self.lines[i][-1])
+                            )
+                        elif (
+                            (x2 is not None)
+                            and (x4 is not None)
+                            and Polygon(
+                                LineString(
+                                    [
+                                        (self.points[k][0], self.points[k][1]),
+                                        (x2, y2),
+                                        (x4, y4),
+                                    ]
+                                )
+                            ).contains(Point(event.x, event.y))
+                            and abs(self.points[k][0] - event.x) <= 25
+                            and abs(self.points[k][1] - event.y) <= 25
+                        ):
+                            label_string = (
+                                chr(ord("A") + self.lines[j][-1])
+                                + chr(ord("A") + k)
+                                + chr(ord("A") + self.lines[i][-1])
+                            )
                         if label_string is not None:
                             label_list.append(label_string)
             minimum_val = 999
             final_label = None
             for i in label_list:
-                vec_a = np.array(self.points[ord(i[0])-ord("A")])-np.array(self.points[ord(i[1])-ord("A")])
-                vec_b = np.array(self.points[ord(i[2])-ord("A")])-np.array(self.points[ord(i[1])-ord("A")])
-                tmp = np.arccos(np.dot(vec_a,vec_b)/(np.linalg.norm(vec_a)*np.linalg.norm(vec_b)))
+                vec_a = np.array(self.points[ord(i[0]) - ord("A")]) - np.array(
+                    self.points[ord(i[1]) - ord("A")]
+                )
+                vec_b = np.array(self.points[ord(i[2]) - ord("A")]) - np.array(
+                    self.points[ord(i[1]) - ord("A")]
+                )
+                tmp = np.arccos(
+                    np.dot(vec_a, vec_b)
+                    / (np.linalg.norm(vec_a) * np.linalg.norm(vec_b))
+                )
                 if minimum_val > tmp:
                     minimum_val = tmp
                     final_label = i
@@ -667,7 +932,8 @@ class DrawingApp:
                     self.selection_string = final_label
                 self.selection_string = "angle " + self.selection_string
                 self.label_text.set(self.selection_string)
-                self.new_window_button.configure(state="normal")     
+                self.new_window_button.configure(state="normal")
+
     def on_right_click(self, event):
         selected_mode = self.option_var.get()
         if selected_mode == "draw_mode":
@@ -676,18 +942,23 @@ class DrawingApp:
                 if abs(event.x - x) <= 5 and abs(event.y - y) <= 5:
                     return
             for i in range(len(self.lines)):
-                for j in range(len(self.lines[i])-1):
-                    [x1, y1], [x2, y2], [x3, y3] = self.points[self.lines[i][j]], self.points[self.lines[i][j+1]], [event.x, event.y]
+                for j in range(len(self.lines[i]) - 1):
+                    [x1, y1], [x2, y2], [x3, y3] = (
+                        self.points[self.lines[i][j]],
+                        self.points[self.lines[i][j + 1]],
+                        [event.x, event.y],
+                    )
                     if is_circle_line_segment_intersection(x3, y3, 2, x1, y1, x2, y2):
                         self.points.append([x3, y3])
-                        self.canvas.create_oval(x3 - 2, y3 - 2, x3 + 2, y3 + 2, fill="red")
-                        self.lines[i].insert(j+1, len(self.points)-1)
+                        self.canvas.create_oval(
+                            x3 - 2, y3 - 2, x3 + 2, y3 + 2, fill="red"
+                        )
+                        self.lines[i].insert(j + 1, len(self.points) - 1)
                         print(self.lines)
                         return
+
+
 if __name__ == "__main__":
     root = tk.Tk()
     app = DrawingApp(root)
     root.mainloop()
-
-# [[0, 2, 3, 1], [4, 3], [4, 6, 5, 2], [7, 6], [8, 5], [7, 8]]
-# {'FGEDC': ['m', {}], 'IFGH': ['n', {}], 'CD': True}
