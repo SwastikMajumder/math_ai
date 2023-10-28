@@ -1419,7 +1419,7 @@ def search(f_input, f_output, equation):
                 q.append(new_step)
     return None
 """
-
+"""
 fl = formula_function()
 eq = string_to_equation_short("inf(((m+1)^2-1)*m^-1)+inf(m)inf(0)")
 # eq = string_to_equation_short("inf(m-22*7^-1)+inf(m)inf(22*7^-1)")
@@ -1429,7 +1429,7 @@ while True:
     print_equation(eq)
     make_list(fl[0], fl[1], eq)
     eq = generate_equation__equation_list[int(input("select: "))]
-
+"""
 """
 output = search(fl[0], fl[1], eq)
 print("solution:")
