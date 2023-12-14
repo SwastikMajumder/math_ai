@@ -374,6 +374,8 @@ def apply_individual_formula(equation, formula_input, formula_output):
             if formula.children[0].label in variable_list.keys(): # already encountered variable, check if same variable represent the same thing only
                 return variable_list[formula.children[0].label].print_algebra() == equation.print_algebra()
             else:
+                if formula.children[0].label == "k" and last_letter(equation) != -999:
+                    return False
                 variable_list[formula.children[0].label] = equation # new variable in the formula
                 return True
         if equation.label != formula.label or len(equation.children) != len(formula.children): # different structure of formula or different mathematical operations
@@ -562,7 +564,7 @@ def calculator(equation):
     elif equation.label == "Add":
         answer = 0
     if equation.label == "Differentiate": # differentiation of constant is zero
-        if equation.children[0].label in ["Integer", "Digit"]:
+        if last_letter(equation.children[0]) == -999:
             return 0
         else:
             return None
@@ -610,7 +612,18 @@ formula_set_1 = \
 a*b+a*c a*(b+c)
 a*1 a
 a+0 a
+a^1 a
+a*(a^(-1)) 1
+(a*b)^c a^c*b^c
+(a^b)^c a^(b*c)
+a^(b*c) (a^b)^c
+a*a a^2
+differentiate(a+b) differentiate(a)+differentiate(b)
 differentiate(a^b) b*(a^(b-1))*differentiate(a)+(a^b)*lawn(a)*differentiate(b)
+differentiate(a*b) b*differentiate(a)+differentiate(b)*a
+integrate(differentiate(a)) a
+integrate(a*differentiate(a)) a^2*2^(-1)
+integrate(k*a) k*integrate(a)
 """
 # formulas apply everywhere expect the first equation
 formula_set_2 = \
@@ -711,7 +724,7 @@ def branch_mathematics(equation_list):
     for i in range(1, len(equation_list)):
         eq_tmp = copy.deepcopy(equation_list)
         eq_tmp.pop(i)
-        outputted_val.append(st)
+        outputted_val.append(eq_tmp)
         eq_tmp = copy.deepcopy(equation_list)
         eq_tmp.append(equation_list[i])
         outputted_val.append(eq_tmp)
@@ -722,8 +735,9 @@ def branch_mathematics(equation_list):
     choice = input("enter your choice: ")
     return outputted_val[int(choice)-1]
 
-equation_in_memory = ["differentiate(m^3)"] # simulatenous equations
+equation_in_memory = ["integrate((2^(-1))*m*differentiate(m))"] # simulatenous equations
 for i in range(len(equation_in_memory)):
     equation_in_memory[i] = math_parser(equation_in_memory[i]).print_algebra()
 while True:
     equation_in_memory = branch_mathematics(equation_in_memory)
+    
