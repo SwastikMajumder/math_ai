@@ -327,7 +327,7 @@ def commutative_property(equation):
 
 # generate all possible commutations of the multiplication and addition, bracketting in all the possible ways
 equation_restructure_buffer = []
-def restructure_equation_commutativity(equation, depth=1): # the depth first search is because, re-bracketing could be done in many possible locations of the tree. 
+def restructure_equation_commutativity(equation, depth=2, selection_mode=True): # the depth first search is because, re-bracketing could be done in many possible locations of the tree. 
     global equation_restructure_buffer
     equation_restructure_buffer.append(equation)
     commute_hierarchy_record = {}
@@ -354,13 +354,26 @@ def restructure_equation_commutativity(equation, depth=1): # the depth first sea
             data_to_return.children.append(change(child, target_location, replace_object))
         return data_to_return
     find_all_commute_instances(equation)
+    selection = [] # holds the current depth commutations
     for key in commute_hierarchy_record.keys():
         for i in range(len(commute_hierarchy_record[key])):
             hierarchical_location = 0
             orig = copy.deepcopy(equation)
             equation = change(equation, int(key), commute_hierarchy_record[key][i]) # do the rebracketting
-            restructure_equation_commutativity(equation, depth-1)
-            equation = orig # undo the rebracketting, so that, other possible rebracketting could be done
+            selection.append(copy.deepcopy(equation))
+            equation = orig
+    if selection_mode: # when all is selected, it should go by default
+        print("0. all")
+        for i in range(len(selection)):
+            print(str(i+1) + ". " + selection[i].print_algebra())
+        selected = int(input("select correct commutative: "))
+        if selected != 0:
+            selection = [selection[selected-1]] # select only one
+        else:
+            selection_mode = False
+    for item in selection:
+        restructure_equation_commutativity(item, depth-1, selection_mode) # search more
+            
     remove_duplicate(equation_restructure_buffer, compare_equation_direct)
     return None
 
@@ -609,6 +622,8 @@ def solve_number_recursive(equation):
 # formulas apply anywhere
 formula_set_1 = \
 """
+a+b*a a*(b+1)
+a*(b+c) a*b+a*c
 a*b+a*c a*(b+c)
 a*1 a
 a+0 a
@@ -619,11 +634,15 @@ a*(a^(-1)) 1
 a^(b*c) (a^b)^c
 a*a a^2
 differentiate(a+b) differentiate(a)+differentiate(b)
+differentiate(a^k) k*(a^(k-1))*differentiate(a)
 differentiate(a^b) b*(a^(b-1))*differentiate(a)+(a^b)*lawn(a)*differentiate(b)
 differentiate(a*b) b*differentiate(a)+differentiate(b)*a
 integrate(differentiate(a)) a
+integrate(a^k*differentiate(a)) a^(k+1)*(k+1)^(-1)
 integrate(a*differentiate(a)) a^2*2^(-1)
 integrate(k*a) k*integrate(a)
+integrate(k*b*differentiate(a)) k*integrate(b*differentiate(a))
+integrate((a+b)*differentiate(c)) integrate(a*differentiate(c))+integrate(b*differentiate(c))
 """
 # formulas apply everywhere expect the first equation
 formula_set_2 = \
@@ -632,6 +651,7 @@ a=b+c a-b=c
 a=b*c a*c^(-1)=b
 a=b differentiate(a)=differentiate(b)
 a=b b=a
+a=b^c a^(c^(-1))=b
 """
 par1 = [(item.split())[0] for item in formula_set_1.splitlines()[1:]]
 par2 = [(item.split())[1] for item in formula_set_1.splitlines()[1:]]
@@ -701,6 +721,7 @@ def branch_mathematics(equation_list):
     b = [math_parser(item).children[1].print_algebra() for item in store_formula]
     global formula_set_1
     global clean_set_2_2
+    
     # apply formulas
     for i in range(len(equation_list)):
         if last_letter(math_parser(equation_list[i])) == -999:
@@ -713,6 +734,7 @@ def branch_mathematics(equation_list):
             eq_tmp = copy.deepcopy(equation_list)
             eq_tmp[i] = item
             outputted_val.append(eq_tmp)
+    
     # substitute equations into each other, in a system of equations
     for i in range(1,len(equation_list)):
         tmp = substitute_by_friend(equation_list[0], equation_list[i])
@@ -735,9 +757,8 @@ def branch_mathematics(equation_list):
     choice = input("enter your choice: ")
     return outputted_val[int(choice)-1]
 
-equation_in_memory = ["integrate((2^(-1))*m*differentiate(m))"] # simulatenous equations
+equation_in_memory = ["(m+n)*(m-n)"]
 for i in range(len(equation_in_memory)):
     equation_in_memory[i] = math_parser(equation_in_memory[i]).print_algebra()
 while True:
     equation_in_memory = branch_mathematics(equation_in_memory)
-    
