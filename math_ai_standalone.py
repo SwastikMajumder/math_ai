@@ -43,15 +43,13 @@ class TreeNode:
             sym = "/"
         elif tree.label == "Power":
             sym = "^"
-        elif tree.label in ["Sin", "Cos", "Tan", "Cosec", "Sec", "Cot", "Integrate", "Differentiate", "Arctan", "Arcsin", "Arccos", "Lawn", "Exp"]:
+        elif tree.label in ["Sin", "Cos", "Tan", "Cosec", "Sec", "Cot", "Integrate", "Differentiate", "Arctan", "Arcsin", "Arccos", "Lawn", "Exp", "Pi"]:
             output_string += tree.label.lower() # we need function name in lower class letters, because in the tree created by cfg, we have first letter capital
             start_index = 1
         elif tree.label in ["Letter", "Digit"]:
             return tree.children[0].label
         elif tree.label == "Integer":
             return TreeNode.integer_resolve(tree)
-        if tree.label == "Pi":
-            return output_string + "pi"
         elif tree.label == "Equal":
             return TreeNode.custom_print_tree(tree.children[0]) + "=" + TreeNode.custom_print_tree(tree.children[1])
         output_string += "("
@@ -206,7 +204,7 @@ def math_parser(sentence, to_be_merged=True):
     Lawn          -> 'lawn' '(' Expression ')' | 'lawn' '(' Function ')'
     Differentiate -> 'differentiate' '(' Expression ')' | 'differentiate' '(' Function ')'
     Exp           -> 'exp' '(' Expression ')' | 'exp' '(' Function ')'
-    Pi            -> 'pi'
+    Pi            -> 'pi' '(' Expression ')'
     """)
     parser = ChartParser(grammar)
     # some operations to handle minus sign because cfg has no substraction
@@ -387,7 +385,7 @@ def apply_individual_formula(equation, formula_input, formula_output):
             if formula.children[0].label in variable_list.keys(): # already encountered variable, check if same variable represent the same thing only
                 return variable_list[formula.children[0].label].print_algebra() == equation.print_algebra()
             else:
-                if formula.children[0].label == "k" and last_letter(equation) != -999:
+                if formula.children[0].label == "k" and last_letter(equation, True) != -999:
                     return False
                 variable_list[formula.children[0].label] = equation # new variable in the formula
                 return True
@@ -554,12 +552,13 @@ def generate_magic_equation(equation, var_should, mode_normal_variable=True):
     return outputted_val
 
 # m+n+o+p, in here the last letter is p. 1+1, in here there is no last letter
-def last_letter(equation):
-    best_letter_till_now = -999 # 
+def last_letter(equation, condition=False):
+    best_letter_till_now = -999
     if equation.label == "Letter":
-        return ord(equation.children[0].label)
+        if condition == False or (condition and equation.children[0].label.islower()):
+            return ord(equation.children[0].label.lower())
     for child in equation.children:
-        val = last_letter(child)
+        val = last_letter(child, condition)
         if val > best_letter_till_now:
             best_letter_till_now = val
     return best_letter_till_now
@@ -577,7 +576,7 @@ def calculator(equation):
     elif equation.label == "Add":
         answer = 0
     if equation.label == "Differentiate": # differentiation of constant is zero
-        if last_letter(equation.children[0]) == -999:
+        if last_letter(equation.children[0], True) == -999:
             return 0
         else:
             return None
@@ -622,6 +621,8 @@ def solve_number_recursive(equation):
 # formulas apply anywhere
 formula_set_1 = \
 """
+a^b*a a^(b+1)
+a+a 2*a
 a+b*a a*(b+1)
 a*(b+c) a*b+a*c
 a*b+a*c a*(b+c)
@@ -633,6 +634,12 @@ a*(a^(-1)) 1
 (a^b)^c a^(b*c)
 a^(b*c) (a^b)^c
 a*a a^2
+cos(pi(a)) 0
+cos(a) sin(pi(0)*(2^(-1))+(-1*a))
+integrate(sin(a)^(-1*2)*differentiate(a)) -1*(tan(a)^(-1))
+integrate(cos(a)^(-1*2)*differentiate(a)) tan(a)
+sin(a)^2 1+(-1*(cos(a)^2))
+integrate(a*differentiate(b)) integrate(a*((sin(b)^2)+(cos(b)^2))*differentiate(b))
 differentiate(a+b) differentiate(a)+differentiate(b)
 differentiate(a^k) k*(a^(k-1))*differentiate(a)
 differentiate(a^b) b*(a^(b-1))*differentiate(a)+(a^b)*lawn(a)*differentiate(b)
@@ -757,7 +764,7 @@ def branch_mathematics(equation_list):
     choice = input("enter your choice: ")
     return outputted_val[int(choice)-1]
 
-equation_in_memory = ["(m+n)*(m-n)"]
+equation_in_memory = ["cos(pi(0))+x"]
 for i in range(len(equation_in_memory)):
     equation_in_memory[i] = math_parser(equation_in_memory[i]).print_algebra()
 while True:
