@@ -1,4 +1,4 @@
-import math_ai
+import physics_math_ai
 import copy
 from collections import defaultdict
 import tkinter as tk
@@ -367,7 +367,7 @@ class DrawingApp:
                 known_count += 1
             elif "angle " + item in self.property_data.keys():
                 check_string = self.property_data["angle " + item]
-                for fx in math_ai.function_full_name_list:
+                for fx in physics_math_ai.function_full_name_list:
                     check_string.replace(fx, "")
                 if any(chr(ord("a") + i) in check_string for i in range(26)):
                     continue
@@ -565,7 +565,7 @@ class DrawingApp:
         total_string = ""
         for item in self.property_data.keys():
             total_string += self.property_data[item]
-        for fx in math_ai.function_full_name_list:
+        for fx in physics_math_ai.function_full_name_list:
             total_string.replace(fx, "")
         total_string = total_string.lower()
         letter = None
