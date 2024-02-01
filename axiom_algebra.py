@@ -1,105 +1,69 @@
-import copy
 from collections import deque
+from anytree import Node, RenderTree, PreOrderIter
+import copy
 
-class TreeNode:
-    break_ch = "\n"
-    sep_ch = " "
-    def __init__(self, data="", left=None, right=None):   
-        self.data = data
-        self.left = left
-        self.right = right
-    # converts given binary tree into a string
-    def __str__(self):
-        def print_tree(self, depth=0):
-            output = depth * TreeNode.sep_ch + self.data + TreeNode.break_ch
-            if self.left:
-                output += print_tree(self.left, depth + 1)
-            if self.right:
-                output += print_tree(self.right, depth + 1)
-            return output
-        return TreeNode.break_ch + print_tree(self)[:-1]
+def build_tree_from_tabbed_strings(tabbed_strings):
+    root = Node("Root")
+    current_level_nodes = {0: root}
+    stack = [root]
+    for tabbed_string in tabbed_strings:
+        level = tabbed_string.count(' ')
+        node_name = tabbed_string.strip()
+        node = Node(node_name)
+        while len(stack) > level + 1:
+            stack.pop()
+        parent_node = stack[-1]
+        parent_node.children = parent_node.children + (node,)
+        current_level_nodes[level] = node
+        stack.append(node)
+    return root
 
-# converts a binary tree into a string
-def parse_tree(tree_string):
-    def parse_tree_r(tree_string, depth=0, data="f_root"):
-        tree = TreeNode(data, None, None)
-        prc = copy.copy(tree_string)
-        a = prc[0].lstrip()
-        tree.left = TreeNode(a, None, None)
-        prc = prc[1:]
-        if not prc:
-            tree.left = TreeNode(a, None, None)
-            return tree
-        if len(prc[0]) != len(prc[0].lstrip()):
-            tmp = [word[1:] for word in prc]
-            for i in range(len(tmp)):
-                if tmp[i][0]=="_":
-                    tmp = tmp[:i]
-                    break
-            tree.left = parse_tree_r(tmp, depth+1, a)
-        for i in range(1,len(prc)):
-            if len(prc[i]) == len(prc[i].lstrip()):
-                prc = prc[i:]
-                break
-        if prc[0][0] == TreeNode.sep_ch:
-            return tree
-        b = prc[0].lstrip()
-        prc = prc[1:]
-        if not prc:
-            tree.right = TreeNode(b, None, None)
-            return tree
-        if len(prc[0]) != len(prc[0].lstrip()):
-            tmp = [word[1:] for word in prc]
-            for i in range(len(tmp)):
-                if tmp[i][0]=="_":
-                    tmp = tmp[:i]
-                    break
-            tree.right = parse_tree_r(tmp, depth+1, b)
-        return tree
-    t = tree_string.split(TreeNode.break_ch)[1:]
-    return parse_tree_r(t).left
+def convert_tree_2_tabbed_string(tree):
+    lines = ["{}{}".format(' ' * (node.depth-1), node.name) for node in PreOrderIter(tree)]
+    return "\n".join(lines[1:])
 
-def fx_nesting(terminal, fx, depth):
-    all_possible = []
-    def neighbour_node(curr_tree):
-        nonlocal depth
-        possibly = terminal + list(fx.keys())
-        letter = None
-        def is_nnn(s):
-            return not (s in fx.keys() and fx[s] > 0)
-        def append_highest_depth(curr_tree, depth):
-            nonlocal letter
-            if (is_nnn(letter) and depth == 0) or (not is_nnn(letter) and depth == 1):
+def eq_str(tree):
+    return convert_tree_2_tabbed_string(tree)
+
+def convert_tree_2_string(tree):
+    lines = []
+    for pre, _, node in RenderTree(tree):
+        lines.append(f"{pre}{node.name}")
+    return "\n".join(lines)
+
+def fx_nest(terminal, fx, depth):
+    def nn(curr_tree, depth=depth):
+        def is_terminal(name):
+            return not (name in fx.keys())
+        element = None
+        def append_at_last(curr_node, depth):
+            if (is_terminal(element) and depth == 0) or (not is_terminal(element) and depth == 1):
                 return None
-            if not is_nnn(curr_tree.data):
-                if curr_tree.left is None:
-                    
-                    curr_tree.left = TreeNode(letter, None, None)
-                    return curr_tree
-                elif curr_tree.right is None and fx[curr_tree.data] == 2:
-                    
-                    curr_tree.right = TreeNode(letter, None, None)
-                    return curr_tree
-                else:                
-                    output = append_highest_depth(curr_tree.left, depth-1)
+            if not is_terminal(curr_node.name):
+                if (not curr_node.parent and len(curr_node.children)==0 and element in fx.keys()) or curr_node.parent:
+                    if len(curr_node.children) < fx[curr_node.name]:
+                        new_children = curr_node.children + (Node(element, parent=curr_node),)
+                        curr_node.children = new_children
+                        return curr_node
+
+                for i in range(len(curr_node.children)):
+                    output = append_at_last(copy.deepcopy(curr_node.children[i]), depth - 1)
                     if output is not None:
-                        curr_tree.left = output
-                        return curr_tree
-                    if curr_tree.right is not None:
-                        output = append_highest_depth(curr_tree.right, depth-1)
-                        if output is not None:
-                            curr_tree.right = output
-                            return curr_tree
+                        new_children = list(copy.deepcopy(curr_node.children))
+                        new_children[i] = output
+                        return Node(curr_node.name, children=new_children, parent=curr_node.parent)
             return None
         output = []
-        for item in possibly:
-            letter = item
-            result = append_highest_depth(copy.deepcopy(curr_tree), copy.copy(depth))
+        for item in terminal + list(fx.keys()):
+            element = item
+            tmp = copy.deepcopy(curr_tree)
+            result = append_at_last(tmp, depth)
             if result is not None:
                 output.append(result)
         return output
-    def bfs(start_node, neighbor_node):
-        nonlocal depth
+    all_poss = []
+    def bfs(start_node):
+        nonlocal all_poss
         queue = deque()
         visited = set()
         queue.append(start_node)
@@ -107,128 +71,133 @@ def fx_nesting(terminal, fx, depth):
             current_node = queue.popleft()
             if current_node not in visited:
                 visited.add(current_node)
-                neighbors = neighbour_node(current_node)
+                neighbors = nn(current_node)
                 if neighbors == []:
-                    all_possible.append(current_node.__str__())
+                    all_poss.append(convert_tree_2_tabbed_string(current_node))
+                    all_poss = list(set(all_poss))
                 for neighbor in neighbors:
                     if neighbor not in visited:
                         queue.append(neighbor)
     for item in fx.keys():
-        node = TreeNode(item, None, None)
-        bfs(node, neighbour_node(node))
-    for item in fx.keys():
-        if fx[item]==0:
-            all_possible.append(TreeNode(item, None, None).__str__())
-    for item in terminal:
-        all_possible.append(TreeNode(item, None, None).__str__())
-    return set(all_possible)
+        bfs(Node(item))
+    return all_poss
 
-def term_generation():
-    function_list = {"f_sum": 2}
-    max_digits = 1
-    max_var = 1
-    return fx_nesting(["c_" + str(i) for i in range(max_digits)]+["v_" + str(i) for i in range(max_var)], function_list, 2)
+con_variable = ["v_" + str(i) for i in range(3,4)]
+con_digits = ["d_" + str(i) for i in range(1)] + ["d_-1"]
 
-def node_type(s):
-    function_list = {"f_sum": 2}
-    if s in function_list.keys():
-        return s
-    elif s[:2] == "v_":
-        return s[:2]
-    else:
-        return "digits"
-    
-def child_count(curr_tree):
-    if curr_tree.left is None:
-        return 0
-    if curr_tree.right is None:
-        return 1
-    return 2
+con_dic_fx = {"f_add": 2, "f_mul": 2, "f_pow": 2, "f_log": 1, "f_sin": 1, "f_cos": 1}
+con_term = fx_nest(con_variable+con_digits, con_dic_fx, 2) + con_variable + con_digits
 
-def apply_individual_formula(equation, formula_input, formula_output):
+def apply_individual_formula(equation, formula_input, formula_output, chance=False):
+    global con_dic_fx
     variable_list = {}
+    def node_type(s):
+        if s in con_dic_fx.keys():
+            return s
+        else:
+            return s[:2]
     def formula_given(equation, formula):
         nonlocal variable_list
-        if node_type(formula.data) == "v_":
-            if formula.data in variable_list.keys(): # already encountered variable, check if same variable represent the same thing only
-                return variable_list[formula.data].__str__() == equation.__str__()
+        if node_type(formula.name) == "v_":
+            if formula.name in variable_list.keys(): # already encountered variable, check if same variable represent the same thing only
+                return eq_str(variable_list[formula.name]) == eq_str(equation)
             else:
-                variable_list[formula.data] = copy.deepcopy(equation) # new variable in the formula
+                variable_list[formula.name] = copy.deepcopy(equation) # new variable in the formula
                 return True
-        if node_type(equation.data) != node_type(formula.data) or child_count(equation) != child_count(formula): # different structure of formula or different mathematical operations
+        if node_type(equation.name) != node_type(formula.name) or len(equation.children) != len(formula.children): # different structure of formula or different mathematical operations
             return False
-        if equation.left:
-            if formula_given(equation.left, formula.left) is False:
+        for i in range(len(equation.children)):
+            if formula_given(equation.children[i], formula.children[i]) is False:
                 return False
-            if equation.right:
-                if formula_given(equation.right, formula.right) is False:
-                    return False
         return True
+    
     def formula_apply(formula):
         nonlocal variable_list
-        if formula.data in variable_list.keys():
-            return variable_list[formula.data] # the variable list already generated, replace the variables in the formula
-        data_to_return = TreeNode(formula.data, None, None)
-        if formula.left:
-            data_to_return.left = formula_apply(formula.left)
-            if formula.right:
-                data_to_return.right = formula_apply(formula.right)
+        if formula.name in variable_list.keys():
+            return variable_list[formula.name] # the variable list already generated, replace the variables in the formula
+        data_to_return = Node(formula.name, None, None)
+        for child in formula.children:
+            new_children = data_to_return.children + (formula_apply(copy.deepcopy(child)),)
+            data_to_return.children = new_children
+            #data_to_return.children.append(formula_apply(child))
         return data_to_return
 
     count_spot = 1
-    def formula_recur(equation, formula_input, formula_output):
+    def formula_recur(equation, formula_input, formula_output, chance):
         nonlocal variable_list
         nonlocal count_spot
         
-        data_to_return = TreeNode(equation.data, [])
+        data_to_return = Node(equation.name, children=[])
         variable_list = {}
-        if formula_given(equation, copy.deepcopy(formula_input)) is True:
-            count_spot -= 1
-            if count_spot == 0: # try different locations
-                return formula_apply(copy.deepcopy(formula_output))
-        if node_type(equation.data) in {"digits", "v_"}:
+        if chance == False:
+            if formula_given(equation, copy.deepcopy(formula_input)) is True:
+                count_spot -= 1
+                if count_spot == 0: # try different locations
+                    return formula_apply(copy.deepcopy(formula_output))
+        else:
+            if len(equation.children)==2 and all(node_type(item.name) == "d_" for item in equation.children):
+                x = []
+                for item in equation.children:
+                    x.append(int(item.name[2:]))
+                if equation.name == "f_add":
+                    count_spot -= 1
+                    if count_spot == 0:
+                        return Node("d_"+str(sum(x)))
+                elif equation.name == "f_mul":
+                    count_spot -= 1
+                    if count_spot == 0:
+                        return Node("d_"+str(x[0]*x[1]))
+                elif equation.name == "f_pow" and not ((x[0]==0 and x[1]<=0) or (x[0]<=0 and x[1]==0)):
+                    count_spot -= 1
+                    if count_spot == 0:
+                        return Node("d_"+str(x[0]**x[1]))
+        if node_type(equation.name) in {"d_", "v_"}:
             return equation
-        if equation.left:
-            data_to_return.left = formula_recur(equation.left, formula_input, formula_output)
-            if equation.right:
-                data_to_return.right = formula_recur(equation.right, formula_input, formula_output)
+        for child in equation.children:
+            new_children = data_to_return.children + (formula_recur(copy.deepcopy(child), formula_input, formula_output, chance),)
+            data_to_return.children = new_children
         return data_to_return
     cn = 0
     def count_nodes(equation):
         nonlocal cn
         cn += 1
-        if equation.left:
-            count_nodes(equation.left)
-            if equation.right:
-                count_nodes(equation.right)
+        for child in equation.children:
+            count_nodes(child)
     outputted_val = []
     count_nodes(equation)
     for i in range(1, cn+1): # try different locations where a formula could be applied
         count_spot = i
         orig_len = len(outputted_val)
-        tmp = formula_recur(equation, formula_input, formula_output)
-        if tmp.__str__() != equation.__str__():
+        
+        tmp = formula_recur(equation, formula_input, formula_output, chance)
+        
+        if eq_str(tmp) != eq_str(equation):
             outputted_val.append(tmp)
     return outputted_val
 
-test_string_2 ="""
-v_1"""
-test_string_3 ="""
-f_sum
- v_1
- c_0"""
+content = None
+with open("axiom.txt", 'r') as file:
+    content = file.read()
+x = content.split("\n\n")
+input_f = [x[i] for i in range(0, len(x), 2)]
+output_f = [x[i] for i in range(1, len(x), 2)]
 
-term_list = list(term_generation())
+input_f = [build_tree_from_tabbed_strings(item.split("\n")) for item in input_f]
+output_f = [build_tree_from_tabbed_strings(item.split("\n")) for item in output_f]
 
-equal_category = [[item] for item in term_list]
+equal_category = [[item] for item in con_term]
 
-axiom_list = [[parse_tree(test_string_2), parse_tree(test_string_3)], [parse_tree(test_string_3), parse_tree(test_string_2)]]
-
-for term in term_list:
-    for axiom in axiom_list:
-        output_list = apply_individual_formula(parse_tree(term), copy.deepcopy(axiom[0]), copy.deepcopy(axiom[1]))
+for term in con_term:
+    for i in range(len(input_f)+1):
+        output_list = None
+        if i == len(input_f):
+            output_list = apply_individual_formula(build_tree_from_tabbed_strings(term.split("\n")).children[0], None, None, True)
+        else:
+            output_list = apply_individual_formula(build_tree_from_tabbed_strings(term.split("\n")).children[0],\
+                                                   copy.deepcopy(input_f[i].children[0]), copy.deepcopy(output_f[i].children[0]))
         for output in output_list:
-            output = output.__str__()
+            output.parent = Node("Root")
+            output = eq_str(output.parent)
             output_loc = -1
             term_loc = -1
             for i in range(len(equal_category)):
@@ -236,13 +205,13 @@ for term in term_list:
                     term_loc = i
                 if output in equal_category[i]:
                     output_loc = i
-            if output_loc != -1:
+            if term_loc != -1 and output_loc != 1 and term_loc != output_loc:
                 equal_category.append(equal_category[output_loc]+equal_category[term_loc])
                 equal_category.pop(max(output_loc, term_loc))
-                if output_loc != term_loc:
-                    equal_category.pop(min(output_loc, term_loc))
+                equal_category.pop(min(output_loc, term_loc))
+
 for item in equal_category:
     item = list(set(item))
     for sub_item in item:
-        print(sub_item)
+        print(convert_tree_2_string(build_tree_from_tabbed_strings(sub_item.split("\n"))))
     print("----")
