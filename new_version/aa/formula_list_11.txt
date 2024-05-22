@@ -1,0 +1,51 @@
+f_int
+ u_0
+ u_0
+
+f_div
+ f_pow
+  u_0
+  d_2
+ d_2
+
+f_int
+ f_add
+  u_0
+  u_1
+ u_2
+
+f_add
+ f_int
+  u_0
+  u_2
+ f_int
+  u_1
+  u_2
+
+f_int
+ f_pow
+  u_0
+  p_0
+ u_0
+
+f_div
+ f_pow
+  u_0
+  f_add
+   p_0
+   d_1
+ f_add
+  p_0
+  d_1
+
+f_int
+ f_mul
+  p_0
+  u_1
+ u_0
+
+f_mul
+ p_0
+ f_int
+  u_1
+  u_0

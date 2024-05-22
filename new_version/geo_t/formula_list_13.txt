@@ -1,0 +1,36 @@
+f_and
+ d_false
+ u_0
+
+d_false
+
+f_or
+ d_true
+ u_0
+
+d_true
+
+f_and
+ u_0
+ u_1
+
+f_and
+ u_1
+ u_0
+
+f_and
+ d_true
+ d_true
+
+d_true
+
+f_not
+ f_and
+  u_0
+  u_1
+
+f_or
+ f_not
+  u_0
+ f_not
+  u_1

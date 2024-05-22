@@ -1,0 +1,153 @@
+f_and
+ f_tri
+  p_0
+  p_3
+  p_4
+ f_tri
+  p_1
+  p_2
+  p_4
+ f_line
+  p_1
+  p_4
+  p_3
+ f_line
+  p_0
+  p_4
+  p_2
+
+f_eq
+ f_angle
+  p_0
+  p_4
+  p_3
+ f_angle
+  p_1
+  p_4
+  p_2
+
+f_and
+ f_para
+  f_line
+   p_0
+   p_3
+  f_line
+   p_1
+   p_2
+ f_line
+  p_0
+  p_4
+  p_2
+ f_line
+  p_1
+  p_4
+  p_3
+
+f_eq
+ f_angle
+  p_3
+  p_0
+  p_4
+ f_angle
+  p_1
+  p_2
+  p_4
+
+f_and
+ f_tri
+  p_0
+  p_3
+  p_4
+ f_tri
+  p_1
+  p_2
+  p_4
+ f_eq
+  f_line
+   p_0
+   p_4
+  f_line
+   p_2
+   p_4
+ f_eq
+  f_angle
+   p_0
+   p_4
+   p_3
+  f_angle
+   p_1
+   p_4
+   p_2
+ f_eq
+  f_angle
+   p_3
+   p_0
+   p_4
+  f_angle
+   p_1
+   p_2
+   p_4
+
+f_con
+ f_tri
+  p_0
+  p_3
+  p_4
+ f_tri
+  p_1
+  p_2
+  p_4
+
+f_and
+ f_tri
+  p_0
+  p_2
+  p_3
+ f_tri
+  p_1
+  p_2
+  p_3
+ f_eq
+  f_line
+   p_0
+   p_2
+  f_line
+   p_1
+   p_2
+ f_eq
+  f_angle
+   p_1
+   p_2
+   p_3
+  f_angle
+   p_0
+   p_2
+   p_3
+
+f_con
+ f_tri
+  p_0
+  p_2
+  p_3
+ f_tri
+  p_1
+  p_2
+  p_3
+
+f_con
+ f_tri
+  p_0
+  p_2
+  p_3
+ f_tri
+  p_1
+  p_2
+  p_3
+
+f_eq
+ f_line
+  p_0
+  p_3
+ f_line
+  p_1 
+  p_3

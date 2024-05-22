@@ -1,0 +1,44 @@
+f_div
+ d_1
+ f_pow
+  f_sin
+   v_0
+  d_2
+
+f_div
+ d_1
+ f_pow
+  f_cos
+   v_0
+  d_2
+
+v_0
+
+f_mul
+ p_0
+ v_0
+
+f_mul
+ v_0
+ p_0
+
+f_pow
+ v_0
+ p_0
+
+f_mul
+ f_pow
+  v_0
+  p_0
+ p_1
+
+f_mul
+ p_1
+ f_pow
+  v_0
+  p_0
+
+p_0
+
+f_sqt
+ v_0

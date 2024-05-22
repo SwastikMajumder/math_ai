@@ -1,0 +1,12 @@
+f_pow
+ f_pow
+  u_0
+  p_0
+ p_1
+
+f_pow
+ u_0
+ f_mul
+  p_0
+  p_1
+ 

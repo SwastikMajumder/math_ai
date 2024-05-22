@@ -1,0 +1,25 @@
+f_tan
+ v_0
+
+f_div
+ f_sin
+  v_0
+ f_cos
+  v_0
+
+f_cosec
+ v_0
+
+f_div
+ d_1
+ f_sin
+  v_0
+
+f_cot
+ v_0
+
+f_div
+ f_cos
+  v_0
+ f_sin
+  v_0

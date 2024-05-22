@@ -1,0 +1,9 @@
+f_mul
+ u_0
+ f_sec
+  v_0
+
+f_div
+ u_0
+ f_cos
+  v_0

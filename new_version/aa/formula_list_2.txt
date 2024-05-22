@@ -1,0 +1,176 @@
+f_add
+ u_0
+ d_0
+
+u_0
+
+f_add
+ v_0
+ v_0
+
+f_mul
+ d_2
+ v_0
+
+f_add
+ v_0
+ f_mul
+  d_2
+  v_0
+
+f_mul
+ d_3
+ v_0
+
+f_mul
+ v_0
+ v_0
+
+f_pow
+ v_0
+ d_2
+
+f_mul
+ v_0
+ f_pow
+  v_0
+  d_2
+
+f_pow
+ v_0
+ d_3
+
+f_mul
+ f_pow
+  v_0
+  d_2
+ v_0
+
+f_pow
+ v_0
+ d_3
+
+f_div
+ f_mul
+  p_0
+  v_0
+ p_1
+
+f_mul
+ f_div
+  p_0
+  p_1
+ v_0
+
+f_div
+ f_pow
+  v_0
+  p_0
+ p_1
+
+f_mul
+ f_div
+  d_1
+  p_1
+ f_pow
+  v_0
+  p_0
+
+f_div
+ f_mul
+  u_0
+  u_1
+ u_0
+
+u_1
+
+f_div
+ f_mul
+  u_0
+  u_1
+ f_mul
+  u_2
+  u_0
+
+f_div
+ u_1
+ u_2
+
+f_div
+ u_0
+ f_div
+  d_1
+  u_1
+
+f_mul
+ u_0
+ u_1
+
+f_div
+ u_0
+ d_1
+
+u_0
+
+f_mul
+ f_add
+  u_0
+  u_1
+ u_2
+
+f_add
+ f_mul
+  u_0
+  u_2
+ f_mul
+  u_1
+  u_2
+
+f_mul
+ v_0
+ f_pow
+  v_0
+  p_0
+
+f_pow
+ v_0
+ f_add
+  p_0
+  d_1
+
+f_sqt
+ u_0
+
+f_pow
+ u_0
+ f_div
+  d_1
+  d_2
+
+f_mul
+ f_pow
+  u_0
+  p_0
+ f_pow
+  u_0
+  p_1
+
+f_pow
+ u_0
+ f_add
+  p_0
+  p_1
+
+f_add
+ f_div
+  p_0
+  p_1
+ p_2
+
+f_div
+ f_add
+  p_0
+  f_mul
+   p_1
+   p_2
+ p_1 

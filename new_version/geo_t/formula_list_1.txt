@@ -1,0 +1,45 @@
+f_pow
+ f_sin
+  v_0
+ d_2
+
+f_sub
+ d_1
+ f_pow
+  f_cos
+   v_0
+  d_2
+
+f_sub
+ d_1
+ f_pow
+  u_0
+  d_2
+
+f_mul
+ f_sub
+  d_1
+  u_0
+ f_add
+  d_1
+  u_0
+
+f_add
+ f_div
+  u_0
+  u_1
+ f_div
+  u_2
+  u_3
+
+f_div
+ f_add
+  f_mul
+   u_0 
+   u_3
+  f_mul
+   u_1
+   u_2
+ f_mul
+  u_1
+  u_3

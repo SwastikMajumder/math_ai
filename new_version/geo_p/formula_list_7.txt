@@ -1,0 +1,55 @@
+f_mul
+ u_0
+ f_add
+  u_1
+  u_2
+
+f_add
+ f_mul
+  u_0
+  u_1
+ f_mul
+  u_2
+  u_0
+
+f_mul
+ f_add
+  u_1
+  u_2
+ u_0
+
+f_add
+ f_mul
+  u_0
+  u_1
+ f_mul
+  u_2
+  u_0
+
+f_mul
+ u_0
+ f_sub
+  u_1
+  u_2
+
+f_sub
+ f_mul
+  u_0
+  u_1
+ f_mul
+  u_2
+  u_0
+
+f_mul
+ f_sub
+  u_1
+  u_2
+ u_0
+
+f_sub
+ f_mul
+  u_0
+  u_1
+ f_mul
+  u_2
+  u_0
